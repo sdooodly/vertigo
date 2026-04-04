@@ -1,68 +1,41 @@
 import * as THREE from 'three';
-import { WORLD_HEIGHT } from '../../constants.js';
-import { altKmToNorm } from '../../altitude.js';
-const H = WORLD_HEIGHT;
-function kmY(km) { return altKmToNorm(km) * H; }
+import { kmToY, kmToYBottom } from '../../altitude.js';
+const M = (c) => new THREE.MeshStandardMaterial({color:c,flatShading:true});
 
 export class Space {
-  constructor(scene) {
-    this.group = new THREE.Group();
-    scene.add(this.group);
-    this.elapsed = 0;
-    // Stars from 50km to 1000km
-    const starCount = 2500, pos = new Float32Array(starCount * 3);
-    const lo = kmY(50), hi = kmY(1000);
-    for (let i = 0; i < starCount; i++) {
-      const i3 = i * 3, a = Math.random() * Math.PI * 2, r = 20 + Math.random() * 120;
-      pos[i3] = Math.cos(a) * r;
-      pos[i3 + 1] = lo + Math.random() * (hi - lo);
-      pos[i3 + 2] = Math.sin(a) * r * 0.5;
+  constructor(scene, hemi) {
+    this.group = new THREE.Group(); scene.add(this.group); this.elapsed = 0;
+    const Y = hemi === 'bottom' ? kmToYBottom : kmToY;
+    // Stars from 100km to 1000km
+    const n = 2000, pos = new Float32Array(n * 3);
+    const lo = Y(100), hi = Y(1000);
+    const yMin = Math.min(lo, hi), yMax = Math.max(lo, hi);
+    for (let i = 0; i < n; i++) {
+      const i3 = i*3, a = Math.random()*Math.PI*2, r = 20+Math.random()*120;
+      pos[i3]=Math.cos(a)*r; pos[i3+1]=yMin+Math.random()*(yMax-yMin); pos[i3+2]=Math.sin(a)*r*.5;
     }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    this.stars = new THREE.Points(geo, new THREE.PointsMaterial({
-      color: 0xffffff, size: 0.7, sizeAttenuation: true, transparent: true, opacity: 0.9
-    }));
-    this.group.add(this.stars);
-
-    // Satellites at ~408km (ISS orbit)
-    this.satellites = [];
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    this.group.add(new THREE.Points(geo, new THREE.PointsMaterial({color:0xffffff,size:.7,sizeAttenuation:true,transparent:true,opacity:.9})));
+    // Satellites ~408km
+    this.sats = [];
     for (let i = 0; i < 5; i++) {
-      const sat = this.mkSat();
-      sat.userData.orbitRadius = 15 + Math.random() * 25;
-      sat.userData.orbitSpeed = 0.2 + Math.random() * 0.3;
-      sat.userData.orbitOffset = Math.random() * Math.PI * 2;
-      sat.userData.baseY = kmY(300 + Math.random() * 200);
-      sat.userData.factId = 'fact-iss';
-      this.group.add(sat); this.satellites.push(sat);
+      const g = new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.BoxGeometry(1.2,.6,.6), M(0x888899)));
+      const pg = new THREE.BoxGeometry(3,.05,1.2), pm = M(0x2244aa);
+      const lp = new THREE.Mesh(pg,pm); lp.position.x=-2.1; g.add(lp);
+      const rp = new THREE.Mesh(pg,pm); rp.position.x=2.1; g.add(rp);
+      g.userData = {or:15+Math.random()*25, os:.2+Math.random()*.3, oo:Math.random()*Math.PI*2, by:Y(300+Math.random()*200)};
+      this.group.add(g); this.sats.push(g);
     }
-
-    // Moon at ~800km (visual, not real distance)
-    const moonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.9, flatShading: true });
-    this.moon = new THREE.Mesh(new THREE.IcosahedronGeometry(6, 1), moonMat);
-    this.moon.position.set(-30, kmY(800), -20);
-    this.group.add(this.moon);
-  }
-  mkSat() {
-    const g = new THREE.Group();
-    const bm = new THREE.MeshStandardMaterial({ color: 0x888899, flatShading: true });
-    g.add(new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.6), bm));
-    const pm = new THREE.MeshStandardMaterial({ color: 0x2244aa, flatShading: true });
-    const pg = new THREE.BoxGeometry(3, 0.05, 1.2);
-    const lp = new THREE.Mesh(pg, pm); lp.position.x = -2.1; g.add(lp);
-    const rp = new THREE.Mesh(pg, pm); rp.position.x = 2.1; g.add(rp);
-    const ant = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.8, 4),
-      new THREE.MeshStandardMaterial({ color: 0xaaaaaa, flatShading: true }));
-    ant.position.y = 0.7; g.add(ant);
-    return g;
+    // Moon
+    const moon = new THREE.Mesh(new THREE.IcosahedronGeometry(6,1), M(0xcccccc));
+    moon.position.set(-30, Y(800), -20); this.group.add(moon);
   }
   update() {
-    this.elapsed += 0.016;
-    for (const sat of this.satellites) {
-      const { orbitRadius, orbitSpeed, orbitOffset, baseY } = sat.userData;
-      const a = this.elapsed * orbitSpeed + orbitOffset;
-      sat.position.set(Math.cos(a) * orbitRadius, baseY, Math.sin(a) * orbitRadius * 0.4);
-      sat.rotation.y = a;
+    this.elapsed += .016;
+    for (const s of this.sats) {
+      const {or,os,oo,by} = s.userData, a = this.elapsed*os+oo;
+      s.position.set(Math.cos(a)*or, by, Math.sin(a)*or*.4); s.rotation.y = a;
     }
   }
 }

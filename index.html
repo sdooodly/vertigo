@@ -6,259 +6,92 @@
   <title>Vertigo</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    html,body{overflow:hidden;height:100%;background:#000}
+    html,body{overflow:hidden;height:100%;background:#000;cursor:default}
     #app{position:fixed;inset:0}
-    canvas{display:block}
+    canvas{display:block;cursor:grab}
+    canvas:active{cursor:grabbing}
 
-    /* ── Depth ruler (left side) ── */
-    #depth-ruler{
-      position:fixed;left:0;top:0;bottom:0;width:60px;
-      z-index:10;pointer-events:none;
-      display:flex;flex-direction:column;align-items:flex-end;
-      justify-content:center;
-    }
-    #depth-ruler .ruler-line{
-      position:absolute;left:0;top:0;bottom:0;width:1px;
-      background:rgba(255,255,255,.12);margin-left:48px;
-    }
-    #depth-value{
-      position:fixed;left:12px;top:50%;transform:translateY(-50%);
-      z-index:11;pointer-events:none;text-align:left;
-    }
-    #depth-value .dv-num{
-      font:bold 1.5rem/1 'Courier New',monospace;color:rgba(255,255,255,.8);
-      letter-spacing:-.02em;
-    }
-    #depth-value .dv-unit{
-      font:0.6rem/1 'Courier New',monospace;color:rgba(255,255,255,.35);
-      letter-spacing:.12em;text-transform:uppercase;margin-top:2px;
-    }
-    #depth-value .dv-zone{
-      font:0.65rem/1 'Courier New',monospace;color:rgba(255,255,255,.45);
-      margin-top:6px;letter-spacing:.06em;
-    }
-    /* tick mark at eye level */
-    #depth-tick{
-      position:fixed;left:48px;top:50%;width:12px;height:1px;
-      background:rgba(255,255,255,.4);z-index:11;pointer-events:none;
-    }
+    /* Depth HUD — left side at eye level */
+    #depth-value{position:fixed;left:16px;top:50%;transform:translateY(-50%);z-index:11;pointer-events:none}
+    .dv-num{font:bold 1.4rem/1 'Courier New',monospace;color:rgba(255,255,255,.75)}
+    .dv-unit{font:.55rem/1 'Courier New',monospace;color:rgba(255,255,255,.3);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+    .dv-zone{font:.6rem/1 'Courier New',monospace;color:rgba(255,255,255,.4);margin-top:6px;letter-spacing:.06em}
+    #depth-tick{position:fixed;left:0;top:50%;width:14px;height:1px;background:rgba(255,255,255,.25);z-index:11;pointer-events:none}
 
-    /* ── Fact markers (right side, infographic style) ── */
-    .fact{
-      position:fixed;right:24px;top:50%;
-      transform:translateY(-50%) translateX(15px);
-      display:flex;align-items:center;gap:10px;
-      opacity:0;transition:opacity .5s,transform .5s;
-      pointer-events:none;z-index:10;
-    }
-    .fact.visible{opacity:1;transform:translateY(-50%) translateX(0)}
-    .fact-line{width:30px;height:1px;background:rgba(255,255,255,.3);flex-shrink:0}
-    .fact-content{text-align:right;font-family:'Courier New',monospace;color:#fff}
-    .fact-title{font-size:.8rem;font-weight:bold;line-height:1.3;letter-spacing:.03em}
-    .fact-depth{font-size:.6rem;opacity:.45;letter-spacing:.1em;margin-top:2px}
-    .fact-desc{font-size:.7rem;opacity:.6;line-height:1.4;margin-top:4px;max-width:240px}
-
-    /* ── Click-to-show fact panel (right side) ── */
-    #fact-panel{
-      position:fixed;right:24px;top:50%;transform:translateY(-50%) translateX(20px);
-      max-width:300px;padding:18px 22px;
-      background:rgba(0,0,0,.6);backdrop-filter:blur(10px);
-      border-left:2px solid rgba(255,255,255,.25);border-radius:0 8px 8px 0;
-      color:#fff;font-family:'Courier New',monospace;
-      opacity:0;transition:opacity .4s,transform .4s;
-      pointer-events:none;z-index:15;
-    }
+    /* Click-to-show fact panel */
+    #fact-panel{position:fixed;right:20px;top:50%;transform:translateY(-50%) translateX(20px);
+      max-width:300px;padding:18px 22px;background:rgba(0,0,0,.65);backdrop-filter:blur(12px);
+      border-left:2px solid rgba(255,255,255,.2);border-radius:0 8px 8px 0;
+      color:#fff;font-family:'Courier New',monospace;opacity:0;transition:opacity .35s,transform .35s;
+      pointer-events:none;z-index:15}
     #fact-panel.visible{opacity:1;transform:translateY(-50%) translateX(0);pointer-events:auto}
-    #fp-title{font-size:.9rem;font-weight:bold;line-height:1.3;margin-bottom:4px}
-    #fp-depth{font-size:.6rem;opacity:.4;letter-spacing:.1em;margin-bottom:8px}
-    #fp-desc{font-size:.75rem;opacity:.7;line-height:1.5}
-    #fp-close{
-      position:absolute;top:8px;right:10px;background:none;border:none;
-      color:rgba(255,255,255,.4);font-size:1rem;cursor:pointer;
-    }
+    #fp-title{font-size:.85rem;font-weight:bold;line-height:1.3;margin-bottom:4px}
+    #fp-depth{font-size:.55rem;opacity:.4;letter-spacing:.1em;margin-bottom:8px}
+    #fp-desc{font-size:.72rem;opacity:.65;line-height:1.5}
+    #fp-close{position:absolute;top:6px;right:8px;background:none;border:none;color:rgba(255,255,255,.35);font-size:1rem;cursor:pointer;padding:4px}
     #fp-close:hover{color:#fff}
 
-    /* ── Button & overlays ── */
+    /* Click hint */
+    #click-hint{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.25);
+      font:.65rem/1 'Courier New',monospace;z-index:10;pointer-events:none;transition:opacity 1s}
+
+    /* Surface button */
     #btn-surface{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:20;
-      padding:10px 24px;font:0.8rem/1 'Courier New',monospace;letter-spacing:.1em;
-      text-transform:uppercase;color:#fff;background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.2);border-radius:24px;cursor:pointer;
-      backdrop-filter:blur(8px);transition:opacity .4s,background .3s;opacity:0;pointer-events:none}
+      padding:10px 24px;font:.8rem/1 'Courier New',monospace;letter-spacing:.1em;text-transform:uppercase;
+      color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:24px;
+      cursor:pointer;backdrop-filter:blur(8px);transition:opacity .4s,background .3s;opacity:0;pointer-events:none}
     #btn-surface.visible{opacity:1;pointer-events:auto}
     #btn-surface:hover{background:rgba(255,255,255,.18)}
+
+    /* Transition fog */
     #transition-fog{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:5;transition:opacity .4s}
+
+    /* Scroll hint */
     #scroll-hint{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);
-      color:rgba(255,255,255,.35);font:0.7rem/1 'Courier New',monospace;
-      z-index:10;pointer-events:none;animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:.3}50%{opacity:.7}}
+      color:rgba(255,255,255,.3);font:.7rem/1 'Courier New',monospace;z-index:10;pointer-events:none;
+      animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:.3}50%{opacity:.6}}
+
+    /* Hidden fact data — never displayed, used as data source for click panel */
+    .fact-data{display:none}
   </style>
 </head>
 <body>
   <div id="app"></div>
 
-  <!-- Depth ruler -->
-  <div id="depth-ruler"><div class="ruler-line"></div></div>
+  <!-- Depth HUD -->
   <div id="depth-tick"></div>
   <div id="depth-value">
-    <div class="dv-num" id="dv-num">0</div>
-    <div class="dv-unit">km</div>
+    <div class="dv-num" id="dv-num">0 m</div>
+    <div class="dv-unit">altitude</div>
     <div class="dv-zone" id="dv-zone">Sea Level</div>
   </div>
 
   <div id="scroll-hint">↕ scroll to explore</div>
+  <div id="click-hint">click objects for info</div>
 
-  <!-- Fact markers — infographic style, right side -->
-  <!-- SPACE -->
-  <div id="fact-iss" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🛰️ International Space Station</div>
-      <div class="fact-depth">408 km</div>
-      <div class="fact-desc">Orbits at 28,000 km/h. 16 sunrises per day.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-karman" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🚀 Kármán Line</div>
-      <div class="fact-depth">100 km</div>
-      <div class="fact-desc">Official boundary of space.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-meteor" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">☄️ Meteors Burn Up</div>
-      <div class="fact-depth">~80 km</div>
-      <div class="fact-desc">Mesopause: −90°C, coldest on Earth.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-felix" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🪂 Felix Baumgartner</div>
-      <div class="fact-depth">38,969 m</div>
-      <div class="fact-desc">Freefall at Mach 1.25 (2012).</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-concorde" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">✈️ Concorde Cruise</div>
-      <div class="fact-depth">18,300 m</div>
-      <div class="fact-desc">Twice the altitude of normal jets.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-jets" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">✈️ Commercial Jets</div>
-      <div class="fact-depth">10,000–12,000 m</div>
-      <div class="fact-desc">−55°C. 25% sea-level pressure.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-everest" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🏔️ Mt. Everest</div>
-      <div class="fact-depth">8,849 m</div>
-      <div class="fact-desc">Death Zone above 8 km. First summited 1953.</div>
-    </div><div class="fact-line"></div>
-  </div>
-
-  <!-- SEA LEVEL -->
-  <div id="fact-sealevel" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🌊 Sea Level</div>
-      <div class="fact-depth">0 m</div>
-      <div class="fact-desc">71% of Earth is ocean. Avg depth: 3,688 m.</div>
-    </div><div class="fact-line"></div>
-  </div>
-
-  <!-- OCEAN -->
-  <div id="fact-light" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">☀️ Light Penetration Limit</div>
-      <div class="fact-depth">−200 m</div>
-      <div class="fact-desc">Photic zone ends. Photosynthesis stops.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-divingsuit" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🤿 Atmospheric Diving Suit</div>
-      <div class="fact-depth">−610 m</div>
-      <div class="fact-desc">Max depth for hard-shell diving suits.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-milsub" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🔱 Military Submarine</div>
-      <div class="fact-depth">−900 m</div>
-      <div class="fact-desc">Crush depth for most military subs.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-spermwhale" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🐋 Sperm Whale</div>
-      <div class="fact-depth">−2,250 m</div>
-      <div class="fact-desc">Deepest diving mammal. Hunts giant squid.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-titanic" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🚢 RMS Titanic</div>
-      <div class="fact-depth">−3,784 m</div>
-      <div class="fact-desc">380 atm pressure. 600 km south of Newfoundland.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-avgocean" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🌊 Average Ocean Depth</div>
-      <div class="fact-depth">−3,688 m</div>
-      <div class="fact-desc">If Earth were flat, water would cover it 2.7 km deep.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-snailfish" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🐟 Hadal Snailfish</div>
-      <div class="fact-depth">−8,178 m</div>
-      <div class="fact-desc">Deepest fish ever recorded (2023).</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-mariana" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🐙 Challenger Deep</div>
-      <div class="fact-depth">−10,935 m</div>
-      <div class="fact-desc">Deepest point. 1,086 atm. First reached 1960.</div>
-    </div><div class="fact-line"></div>
-  </div>
-
-  <!-- UNDERGROUND -->
-  <div id="fact-kola" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🪨 Kola Superdeep Borehole</div>
-      <div class="fact-depth">−12,262 m</div>
-      <div class="fact-desc">Deepest drill. 180°C. Took 20 years.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-mantle" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🌋 Earth's Mantle</div>
-      <div class="fact-depth">−35 to −2,891 km</div>
-      <div class="fact-desc">84% of Earth's volume. Drives plate tectonics.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-outercore" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🧲 Outer Core</div>
-      <div class="fact-depth">−2,891 to −5,150 km</div>
-      <div class="fact-desc">Liquid iron. Generates Earth's magnetic field.</div>
-    </div><div class="fact-line"></div>
-  </div>
-  <div id="fact-innercore" class="fact">
-    <div class="fact-content">
-      <div class="fact-title">🔥 Inner Core</div>
-      <div class="fact-depth">−5,150 to −6,371 km</div>
-      <div class="fact-desc">Solid iron. 5,200°C. Radius: 1,220 km.</div>
-    </div><div class="fact-line"></div>
-  </div>
+  <!-- Hidden fact data (read by JS on click) -->
+  <div class="fact-data" id="fact-iss" data-title="🛰️ International Space Station" data-depth="408 km" data-desc="Orbits at 28,000 km/h, completing one orbit every 90 min. Astronauts see 16 sunrises per day."></div>
+  <div class="fact-data" id="fact-karman" data-title="🚀 Kármán Line" data-depth="100 km" data-desc="The internationally recognized boundary of space."></div>
+  <div class="fact-data" id="fact-meteor" data-title="☄️ Meteors Burn Up" data-depth="~80 km" data-desc="Mesopause: −90°C, the coldest natural temperature on Earth."></div>
+  <div class="fact-data" id="fact-felix" data-title="🪂 Felix Baumgartner" data-depth="38,969 m" data-desc="Freefall at Mach 1.25 — first human to break the sound barrier without a vehicle (2012)."></div>
+  <div class="fact-data" id="fact-concorde" data-title="✈️ Concorde" data-depth="18,300 m" data-desc="Cruised at twice the altitude of subsonic jets. Passengers could see Earth's curvature."></div>
+  <div class="fact-data" id="fact-jets" data-title="✈️ Commercial Jets" data-depth="10–12 km" data-desc="Outside: −55°C, 25% sea-level pressure."></div>
+  <div class="fact-data" id="fact-everest" data-title="🏔️ Mt. Everest" data-depth="8,849 m" data-desc="Highest point on Earth. Death Zone above 8 km — 33% oxygen. First summited by Hillary & Tenzing, 1953."></div>
+  <div class="fact-data" id="fact-sealevel" data-title="🌊 Sea Level" data-depth="0 m" data-desc="71% of Earth's surface is ocean. Average depth: 3,688 m."></div>
+  <div class="fact-data" id="fact-light" data-title="☀️ Sunlight Limit" data-depth="−200 m" data-desc="Photic zone ends. No more photosynthesis below this depth."></div>
+  <div class="fact-data" id="fact-milsub" data-title="🔱 Military Submarine" data-depth="−900 m" data-desc="Crush depth for most military submarines."></div>
+  <div class="fact-data" id="fact-spermwhale" data-title="🐋 Sperm Whale" data-depth="−2,250 m" data-desc="Deepest diving mammal. Hunts giant squid in total darkness."></div>
+  <div class="fact-data" id="fact-titanic" data-title="🚢 RMS Titanic" data-depth="−3,784 m" data-desc="Rests 600 km south of Newfoundland. Pressure: 380 atmospheres."></div>
+  <div class="fact-data" id="fact-snailfish" data-title="🐟 Hadal Snailfish" data-depth="−8,178 m" data-desc="Deepest fish ever recorded (2023)."></div>
+  <div class="fact-data" id="fact-mariana" data-title="🐙 Challenger Deep" data-depth="−10,935 m" data-desc="Deepest known point. 1,086 atm. First reached by Piccard & Walsh, 1960."></div>
+  <div class="fact-data" id="fact-mantle" data-title="🌋 Earth's Mantle" data-depth="−35 to −2,891 km" data-desc="84% of Earth's volume. Solid rock that convects over millions of years."></div>
+  <div class="fact-data" id="fact-outercore" data-title="🧲 Outer Core" data-depth="−2,891 to −5,150 km" data-desc="Liquid iron-nickel at 4,000–5,700°C. Generates Earth's magnetic field."></div>
+  <div class="fact-data" id="fact-innercore" data-title="🔥 Inner Core" data-depth="−5,150 to −6,371 km" data-desc="Solid iron-nickel sphere. 5,200°C — comparable to the Sun's surface."></div>
 
   <!-- Click fact panel -->
   <div id="fact-panel">
-    <button id="fp-close">✕</button>
+    <button id="fp-close" aria-label="Close">✕</button>
     <div id="fp-title"></div>
     <div id="fp-depth"></div>
     <div id="fp-desc"></div>

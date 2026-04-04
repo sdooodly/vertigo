@@ -4,28 +4,34 @@ import { WORLD_HEIGHT } from '../components/Environment.js';
 const H = WORLD_HEIGHT;
 
 /**
- * One-directional infinite scroll (downward).
+ * Linear infinite scroll — always downward.
  * 
- * The world is mirrored: the camera Y follows a triangle wave.
- * progress 0.00 → Surface (Y = 0.5H)  ← start here
- * progress 0.25 → Core    (Y = 0)
- * progress 0.50 → Surface (Y = 0.5H)
- * progress 0.75 → Space   (Y = H)
- * progress 1.00 → Surface (Y = 0.5H)  ← wraps to 0.00
+ * Camera Y decreases as you scroll down.
+ * World layout (top to bottom):
+ *   Y = H    → Deep Space (top)
+ *   Y = 0.9H → ISS / Exosphere
+ *   Y = 0.5H → Sea Level (surface) ← start here
+ *   Y = 0.3H → Mariana Trench
+ *   Y = 0    → Core (bottom)
  * 
- * Scrolling down always increases progress. Scrolling up decreases it.
- * The wrap at progress 0/1 is at the surface, which is seamless.
+ * When Y goes below 0, it wraps to H (space).
+ * When Y goes above H, it wraps to 0 (core).
+ * The wrap at Y=0/Y=H is masked by transition fog (both are dark).
+ * 
+ * Scrolling down = Y decreases = going deeper.
+ * After core (Y=0), wraps to space (Y=H), then continues down
+ * through atmosphere → surface → ocean → core again.
  */
 export function createScrollController(env) {
-  let progress = 0; // start at surface
-  const scrollSpeed = 0.00008;
+  let currentY = H * 0.68; // start at top hemisphere sea level
+  const scrollSpeed = 0.15;
 
   window.addEventListener('wheel', (e) => {
     e.preventDefault();
-    // Only scroll down increases progress (positive deltaY)
-    // But allow scrolling up too for usability
-    progress += e.deltaY * scrollSpeed;
-    progress = ((progress % 1) + 1) % 1;
+    // deltaY > 0 = scroll down = Y decreases (going deeper)
+    currentY -= e.deltaY * scrollSpeed;
+    // Wrap around
+    currentY = ((currentY % H) + H) % H;
   }, { passive: false });
 
   let touchStartY = 0;
@@ -36,49 +42,34 @@ export function createScrollController(env) {
     e.preventDefault();
     const dy = touchStartY - e.touches[0].clientY;
     touchStartY = e.touches[0].clientY;
-    progress += dy * scrollSpeed * 3;
-    progress = ((progress % 1) + 1) % 1;
+    // Swipe up = go deeper = Y decreases
+    currentY -= dy * scrollSpeed * 0.5;
+    currentY = ((currentY % H) + H) % H;
   }, { passive: false });
 
   return {
     update() {
-      // Triangle wave mapping:
-      // progress 0.0→0.25: Surface→Core  (Y goes from 0.5H down to 0)
-      // progress 0.25→0.75: Core→Space   (Y goes from 0 up to H)
-      // progress 0.75→1.0: Space→Surface (Y goes from H down to 0.5H)
-      const p = progress;
-      let y;
-      if (p <= 0.25) {
-        // Descending: surface to core
-        y = H * (0.5 - p * 2); // p=0→Y=0.5H, p=0.25→Y=0
-      } else if (p <= 0.75) {
-        // Ascending through the other side: core to space
-        y = H * ((p - 0.25) * 2); // p=0.25→Y=0, p=0.75→Y=H
-      } else {
-        // Descending back: space to surface
-        y = H * (1 - (p - 0.75) * 2); // p=0.75→Y=H, p=1.0→Y=0.5H
-      }
-      env.targetY = y;
+      env.targetY = currentY;
     },
 
     goToSurface() {
-      // Find shortest path to progress=0 (surface)
-      let target = 0;
-      let diff = target - progress;
-      if (diff > 0.5) diff -= 1;
-      if (diff < -0.5) diff += 1;
-      const finalTarget = progress + diff;
+      const surfaceY = H * 0.68;
+      // Find shortest path around the loop
+      let diff = surfaceY - currentY;
+      if (diff > H / 2) diff -= H;
+      if (diff < -H / 2) diff += H;
+      const target = currentY + diff;
 
-      gsap.to({ p: progress }, {
-        p: finalTarget,
+      gsap.to({ y: currentY }, {
+        y: target,
         duration: 1.5,
         ease: 'power2.inOut',
         onUpdate() {
-          progress = ((this.targets()[0].p % 1) + 1) % 1;
+          currentY = ((this.targets()[0].y % H) + H) % H;
         },
       });
     },
 
-    getProgress() { return progress; },
+    getProgress() { return 1 - currentY / H; },
   };
 }

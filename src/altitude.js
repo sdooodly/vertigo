@@ -1,58 +1,90 @@
 /**
- * Piecewise-linear altitude mapping.
- * Gives generous space to ocean and near-surface zones.
+ * Symmetric world: drilling through Earth from space to space.
+ * 
+ * norm (Y/H) layout — symmetric around 0.5 (core):
+ * 
+ *   1.00 → Deep Space (top)        +1000 km
+ *   0.92 → ISS                     +408 km
+ *   0.85 → Kármán Line             +100 km
+ *   0.78 → Stratosphere            +39 km
+ *   0.73 → Commercial jets         +12 km
+ *   0.70 → Everest                 +8.849 km
+ *   0.68 → Sea Level (top)         0 km
+ *   0.64 → Titanic depth           −3.784 km
+ *   0.60 → Mariana Trench          −10.935 km
+ *   0.56 → Crust                   −35 km
+ *   0.53 → Upper Mantle            −2891 km
+ *   0.50 → CORE                    −6371 km
+ *   --- mirror below ---
+ *   0.47 → Upper Mantle (bottom)
+ *   0.44 → Crust (bottom)
+ *   0.40 → Mariana Trench (bottom)
+ *   0.36 → Titanic depth (bottom)
+ *   0.32 → Sea Level (bottom)
+ *   0.30 → Everest (bottom)
+ *   0.27 → Jets (bottom)
+ *   0.22 → Stratosphere (bottom)
+ *   0.15 → Kármán Line (bottom)
+ *   0.08 → ISS (bottom)
+ *   0.00 → Deep Space (bottom) — wraps to 1.00
  *
- * norm → real altitude (km):
- *   0.00 → -6,371  (inner core center)
- *   0.10 → -5,150  (outer/inner core boundary)
- *   0.18 → -2,891  (mantle/outer core boundary)
- *   0.25 → -35     (crust base)
- *   0.30 → -11     (mariana trench)
- *   0.35 → -3.8    (titanic depth)
- *   0.42 → -0.2    (light penetration limit)
- *   0.50 → 0       (sea level)
- *   0.55 → 8.849   (everest)
- *   0.60 → 12      (commercial jets)
- *   0.70 → 39      (felix baumgartner)
- *   0.80 → 100     (karman line)
- *   0.90 → 408     (ISS)
- *   1.00 → 1,000   (deep space)
+ * Top half (norm 0.50 → 1.00): core to space
+ * Bottom half (norm 0.50 → 0.00): core to space (mirrored)
  */
 
-const SEGMENTS = [
-  // [normStart, normEnd, altStart, altEnd]
-  [0.00, 0.10, -6371, -5150],
-  [0.10, 0.18, -5150, -2891],
-  [0.18, 0.25, -2891, -35],
-  [0.25, 0.30, -35,   -11],
-  [0.30, 0.35, -11,   -3.8],
-  [0.35, 0.42, -3.8,  -0.2],
-  [0.42, 0.50, -0.2,  0],
-  [0.50, 0.55, 0,     8.849],
-  [0.55, 0.60, 8.849, 12],
-  [0.60, 0.70, 12,    39],
-  [0.70, 0.80, 39,    100],
-  [0.80, 0.90, 100,   408],
-  [0.90, 1.00, 408,   1000],
+// Top half segments: norm 0.50→1.00 maps to -6371→+1000 km
+const TOP_SEGS = [
+  [0.50, 0.53, -6371, -2891],
+  [0.53, 0.56, -2891, -35],
+  [0.56, 0.60, -35,   -10.935],
+  [0.60, 0.64, -10.935, -3.784],
+  [0.64, 0.68, -3.784, 0],
+  [0.68, 0.70, 0,     8.849],
+  [0.70, 0.73, 8.849, 12],
+  [0.73, 0.78, 12,    39],
+  [0.78, 0.85, 39,    100],
+  [0.85, 0.92, 100,   408],
+  [0.92, 1.00, 408,   1000],
 ];
 
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+/**
+ * Convert norm (0-1) to real altitude in km.
+ * Top half (0.5-1.0): going up from core to space
+ * Bottom half (0.0-0.5): mirror of top half (other side of Earth)
+ */
 export function normToAltKm(norm) {
   const n = Math.max(0, Math.min(1, norm));
-  for (const [ns, ne, as, ae] of SEGMENTS) {
-    if (n >= ns && n <= ne) {
-      const t = (n - ns) / (ne - ns);
-      return as + t * (ae - as);
+  // Use top half for both sides (symmetric)
+  const topN = n >= 0.5 ? n : 1.0 - n; // mirror bottom half
+  for (const [ns, ne, as, ae] of TOP_SEGS) {
+    if (topN >= ns && topN <= ne) {
+      const t = (topN - ns) / (ne - ns);
+      return lerp(as, ae, t);
     }
   }
-  return n >= 1 ? 1000 : -6371;
+  return topN >= 1 ? 1000 : -6371;
 }
 
+/**
+ * Convert real altitude in km to norm (0-1).
+ * Returns the TOP half norm (0.5-1.0). 
+ * For bottom half, caller mirrors: bottomNorm = 1.0 - topNorm
+ */
 export function altKmToNorm(km) {
-  for (const [ns, ne, as, ae] of SEGMENTS) {
-    if ((km >= as && km <= ae) || (km <= as && km >= ae)) {
+  for (const [ns, ne, as, ae] of TOP_SEGS) {
+    const lo = Math.min(as, ae), hi = Math.max(as, ae);
+    if (km >= lo && km <= hi) {
       const t = (km - as) / (ae - as);
       return ns + t * (ne - ns);
     }
   }
-  return km >= 1000 ? 1.0 : 0.0;
+  return km >= 1000 ? 1.0 : 0.5;
 }
+
+/** Convert km to Y position (top hemisphere) */
+export function kmToY(km) { return altKmToNorm(km) * 5000; }
+
+/** Convert km to Y position (bottom hemisphere, mirrored) */
+export function kmToYBottom(km) { return (1.0 - altKmToNorm(km)) * 5000; }
