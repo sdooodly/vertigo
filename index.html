@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vertigo</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{overflow:hidden;height:100%;background:#000}
+    #app{position:fixed;inset:0}
+    canvas{display:block}
+    #altitude-hud{position:fixed;top:16px;left:16px;color:rgba(255,255,255,.5);font:0.75rem/1 'Courier New',monospace;letter-spacing:.08em;z-index:10;pointer-events:none}
+    .layer-label{position:fixed;left:50%;transform:translateX(-50%);color:#fff;font:1.1rem/1 'Courier New',monospace;letter-spacing:.15em;text-transform:uppercase;opacity:0;transition:opacity .6s;pointer-events:none;text-shadow:0 0 12px rgba(255,255,255,.5);z-index:10}
+    .layer-label.visible{opacity:1}
+    .trivia{position:fixed;right:5%;top:50%;transform:translateY(-50%) translateX(20px);color:#fff;font:0.85rem/1.5 'Courier New',monospace;max-width:280px;padding:12px 16px;border-left:2px solid rgba(255,255,255,.3);background:rgba(0,0,0,.4);backdrop-filter:blur(4px);border-radius:0 6px 6px 0;opacity:0;transition:opacity .6s,transform .6s;pointer-events:none;z-index:10}
+    .trivia.visible{opacity:1;transform:translateY(-50%) translateX(0)}
+    .trivia-altitude{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin-bottom:4px}
+    #btn-surface{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:20;padding:10px 24px;font:0.85rem/1 'Courier New',monospace;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:24px;cursor:pointer;backdrop-filter:blur(8px);transition:opacity .4s,background .3s;opacity:0;pointer-events:none}
+    #btn-surface.visible{opacity:1;pointer-events:auto}
+    #btn-surface:hover{background:rgba(255,255,255,.18)}
+    #transition-fog{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:5;transition:opacity .4s}
+    #scroll-hint{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.4);font:0.75rem/1 'Courier New',monospace;z-index:10;pointer-events:none;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="altitude-hud"></div>
+  <div id="scroll-hint">↕ Scroll to explore</div>
+
+  <div id="label-deep-space" class="layer-label" style="top:12%">Deep Space</div>
+  <div id="label-exosphere" class="layer-label" style="top:22%">Exosphere</div>
+  <div id="label-thermosphere" class="layer-label" style="top:35%">Thermosphere</div>
+  <div id="label-troposphere" class="layer-label" style="top:50%">Troposphere</div>
+  <div id="label-crust" class="layer-label" style="top:65%">Crust</div>
+  <div id="label-mantle" class="layer-label" style="top:78%">Mantle</div>
+  <div id="label-core" class="layer-label" style="top:90%">Core</div>
+
+  <div id="trivia-iss" class="trivia"><div class="trivia-altitude">408 km — Low Earth Orbit</div>🛰️ The ISS orbits here at 28,000 km/h. Astronauts see 16 sunrises every day.</div>
+  <div id="trivia-karman" class="trivia"><div class="trivia-altitude">100 km — Kármán Line</div>🚀 The official boundary of space.</div>
+  <div id="trivia-meteor" class="trivia"><div class="trivia-altitude">80 km — Mesosphere</div>☄️ Meteors burn up here. The coldest layer at −90°C.</div>
+  <div id="trivia-felix" class="trivia"><div class="trivia-altitude">39 km — Stratosphere</div>🪂 Felix Baumgartner jumped from here in 2012, breaking the sound barrier.</div>
+  <div id="trivia-concorde" class="trivia"><div class="trivia-altitude">18 km — Upper Troposphere</div>✈️ Concorde cruised here — twice the altitude of normal jets.</div>
+  <div id="trivia-planes" class="trivia"><div class="trivia-altitude">10 km — Cruising Altitude</div>✈️ Commercial planes fly here. −55°C outside your window.</div>
+  <div id="trivia-everest" class="trivia"><div class="trivia-altitude">8.8 km — Mt. Everest</div>🏔️ The "Death Zone" starts at 8 km.</div>
+  <div id="trivia-surface" class="trivia"><div class="trivia-altitude">0 km — Sea Level</div>🌊 You are here. 71% of Earth's surface is water.</div>
+  <div id="trivia-titanic" class="trivia"><div class="trivia-altitude">−3.8 km — Ocean Floor</div>🚢 The Titanic rests here. Pressure: 400× atmospheric.</div>
+  <div id="trivia-mariana" class="trivia"><div class="trivia-altitude">−11 km — Mariana Trench</div>🐙 Deepest point on Earth. Deeper than Everest is tall.</div>
+  <div id="trivia-crust" class="trivia"><div class="trivia-altitude">−35 km — Earth's Crust</div>🪨 Deepest drill: 12.2 km (Kola Borehole). Stopped at 180°C.</div>
+  <div id="trivia-mantle" class="trivia"><div class="trivia-altitude">−2,900 km — Mantle</div>🌋 Rock that flows like putty. Drives tectonic plates.</div>
+  <div id="trivia-outer-core" class="trivia"><div class="trivia-altitude">−5,100 km — Outer Core</div>🧲 Liquid iron. Generates Earth's magnetic field.</div>
+  <div id="trivia-inner-core" class="trivia"><div class="trivia-altitude">−6,371 km — Inner Core</div>🔥 Solid iron, size of the Moon. 5,400°C.</div>
+
+  <button id="btn-surface" aria-label="Return to surface">↑ Surface</button>
+  <div id="transition-fog"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
