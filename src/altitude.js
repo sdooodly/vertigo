@@ -50,6 +50,8 @@ export function altKmToNorm(km) {
 
 export function kmToY(km) { return altKmToNorm(km) * 5000; }
 
+export const WORLD_HEIGHT = 5000;
+
 /** Ordered list of landmark norms for jump navigation */
 export const LANDMARKS = [
   { norm: 0.02, label: 'Inner Core' },

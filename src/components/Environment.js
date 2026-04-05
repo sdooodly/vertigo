@@ -7,8 +7,7 @@ import { Clouds } from './Layers/Clouds.js';
 import { Ocean } from './Layers/Ocean.js';
 import { Surface } from './Layers/Surface.js';
 import { Core } from './Layers/Core.js';
-import { WORLD_HEIGHT } from '../constants.js';
-import { normToAltKm } from '../altitude.js';
+import { normToAltKm, WORLD_HEIGHT } from '../altitude.js';
 
 export { WORLD_HEIGHT };
 const H = WORLD_HEIGHT;
@@ -44,6 +43,16 @@ export class Environment {
 
     this.targetY = startY;
     this.currentY = startY;
+
+    // Cached biome colors (avoid GC pressure)
+    this._biomeColors = {
+      sky: new THREE.Color(0x87ceeb),
+      indigo: new THREE.Color(0x050520),
+      shallow: new THREE.Color(0x1a8fcc),
+      deep: new THREE.Color(0x021828),
+      crust: new THREE.Color(0x3b1f0a),
+      coreRed: new THREE.Color(0x330000),
+    };
 
     // Single set of layers — core to sun
     this.layers = [
@@ -130,22 +139,23 @@ export class Environment {
 
   updateBiome(norm) {
     const bg = this.scene.background;
+    const c = this._biomeColors;
     if (norm > 0.7) { bg.setHex(0x000000); this.fog.density = 0; }
     else if (norm > 0.5) {
-      const t = (norm - 0.5) / 0.2;
-      bg.copy(new THREE.Color(0x87ceeb)).lerp(new THREE.Color(0x050520), Math.min(t, 1));
-      this.fog.color.copy(bg); this.fog.density = 0.0004 * Math.min(t, 1);
+      const t = Math.min((norm - 0.5) / 0.2, 1);
+      bg.copy(c.sky).lerp(c.indigo, t);
+      this.fog.color.copy(bg); this.fog.density = 0.0004 * t;
     } else if (norm > 0.35) {
-      const t = (0.5 - norm) / 0.15;
-      bg.copy(new THREE.Color(0x1a8fcc)).lerp(new THREE.Color(0x021828), Math.min(t, 1));
-      this.fog.color.copy(bg); this.fog.density = 0.001 * Math.min(t, 1);
+      const t = Math.min((0.5 - norm) / 0.15, 1);
+      bg.copy(c.shallow).lerp(c.deep, t);
+      this.fog.color.copy(bg); this.fog.density = 0.001 * t;
     } else if (norm > 0.10) {
-      const t = (0.35 - norm) / 0.25;
-      bg.copy(new THREE.Color(0x021828)).lerp(new THREE.Color(0x3b1f0a), Math.min(t, 1));
-      this.fog.color.copy(bg); this.fog.density = 0.002 * Math.min(t, 1);
+      const t = Math.min((0.35 - norm) / 0.25, 1);
+      bg.copy(c.deep).lerp(c.crust, t);
+      this.fog.color.copy(bg); this.fog.density = 0.002 * t;
     } else {
       const t = norm / 0.10;
-      bg.copy(new THREE.Color(0x330000)).lerp(new THREE.Color(0x3b1f0a), t);
+      bg.copy(c.coreRed).lerp(c.crust, t);
       this.fog.color.copy(bg); this.fog.density = 0.002 * (1 - t);
     }
   }

@@ -11,77 +11,91 @@
     canvas{display:block;cursor:grab}
     canvas:active{cursor:grabbing}
 
-    /* Start page overlay */
-    #start-page{
-      position:fixed;inset:0;z-index:50;
-      background:radial-gradient(ellipse at 50% 60%, #0a1628 0%, #000 70%);
+    /* ── Start page ── */
+    #start-page{position:fixed;inset:0;z-index:50;
+      background:radial-gradient(ellipse at 50% 60%,#0a1628 0%,#000 70%);
       display:flex;flex-direction:column;align-items:center;justify-content:center;
-      transition:opacity .8s,visibility .8s;
-      font-family:'Courier New',monospace;color:#fff;
-    }
+      transition:opacity .8s,visibility .8s;font-family:'Courier New',monospace;color:#fff}
     #start-page.hidden{opacity:0;visibility:hidden;pointer-events:none}
-    #start-title{font-size:2.2rem;font-weight:bold;letter-spacing:.15em;margin-bottom:8px}
-    #start-sub{font-size:.75rem;opacity:.45;letter-spacing:.1em;margin-bottom:40px;text-align:center;max-width:400px;line-height:1.6}
-    #start-diagram{width:320px;height:auto;margin-bottom:36px;opacity:.7}
-    #start-btn{
-      padding:14px 36px;font:.85rem/1 'Courier New',monospace;letter-spacing:.12em;
+    .st-title{font-size:2.2rem;font-weight:bold;letter-spacing:.15em;margin-bottom:8px}
+    .st-sub{font-size:.72rem;opacity:.4;letter-spacing:.08em;margin-bottom:36px;text-align:center;max-width:420px;line-height:1.6}
+    #start-diagram{width:300px;height:auto;margin-bottom:32px;opacity:.7}
+    .st-btn{padding:14px 36px;font:.82rem/1 'Courier New',monospace;letter-spacing:.12em;
       text-transform:uppercase;color:#fff;background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.2);border-radius:28px;cursor:pointer;
-      transition:background .3s,transform .2s;
-    }
-    #start-btn:hover{background:rgba(255,255,255,.14);transform:scale(1.03)}
+      transition:background .3s,transform .2s}
+    .st-btn:hover{background:rgba(255,255,255,.14);transform:scale(1.03)}
 
-    /* Depth HUD — left side at eye level */
-    #depth-value{position:fixed;left:16px;top:50%;transform:translateY(-50%);z-index:11;pointer-events:none}
-    .dv-num{font:bold 1.4rem/1 'Courier New',monospace;color:rgba(255,255,255,.75)}
-    .dv-unit{font:.55rem/1 'Courier New',monospace;color:rgba(255,255,255,.3);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
-    .dv-zone{font:.6rem/1 'Courier New',monospace;color:rgba(255,255,255,.4);margin-top:6px;letter-spacing:.06em}
-    #depth-tick{position:fixed;left:0;top:50%;width:14px;height:1px;background:rgba(255,255,255,.25);z-index:11;pointer-events:none}
+    /* ── Left nav ── */
+    #nav{position:fixed;left:0;top:0;bottom:0;width:200px;z-index:30;
+      font-family:'Courier New',monospace;overflow-y:auto;
+      background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
+      border-right:1px solid rgba(255,255,255,.06);
+      transform:translateX(-200px);transition:transform .3s;
+      scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
+    #nav.open{transform:translateX(0)}
+    #nav-toggle{position:fixed;left:12px;top:12px;z-index:31;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.6);font-size:.9rem;width:32px;height:32px;
+      border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      transition:left .3s,background .2s}
+    #nav-toggle.shifted{left:212px}
+    #nav-toggle:hover{background:rgba(255,255,255,.12)}
+    .nav-section{padding:8px 0}
+    .nav-section:first-child{padding-top:48px}
+    .nav-head{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;
+      color:rgba(255,255,255,.3);padding:6px 14px;cursor:pointer}
+    .nav-head:hover{color:rgba(255,255,255,.5)}
+    .nav-item{font-size:.65rem;color:rgba(255,255,255,.5);padding:4px 14px 4px 24px;
+      cursor:pointer;transition:color .2s,background .2s;letter-spacing:.03em}
+    .nav-item:hover{color:#fff;background:rgba(255,255,255,.06)}
+    .nav-item.active{color:#fff;border-left:2px solid rgba(255,255,255,.4)}
+    .nav-home{font-size:.65rem;color:rgba(255,255,255,.35);padding:8px 14px;
+      cursor:pointer;border-top:1px solid rgba(255,255,255,.06);margin-top:8px}
+    .nav-home:hover{color:#fff}
 
-    /* Click-to-show fact panel */
+    /* ── Altitude HUD ── */
+    #alt-hud{position:fixed;left:16px;bottom:16px;z-index:11;pointer-events:none;
+      font-family:'Courier New',monospace}
+    .ah-num{font:bold 1.2rem/1 'Courier New',monospace;color:rgba(255,255,255,.7)}
+    .ah-zone{font:.55rem/1 'Courier New',monospace;color:rgba(255,255,255,.35);margin-top:4px;letter-spacing:.06em}
+
+    /* ── Fact panel ── */
     #fact-panel{position:fixed;right:20px;top:50%;transform:translateY(-50%) translateX(20px);
-      max-width:300px;padding:18px 22px;background:rgba(0,0,0,.65);backdrop-filter:blur(12px);
+      max-width:280px;padding:16px 20px;background:rgba(0,0,0,.65);backdrop-filter:blur(12px);
       border-left:2px solid rgba(255,255,255,.2);border-radius:0 8px 8px 0;
       color:#fff;font-family:'Courier New',monospace;opacity:0;transition:opacity .35s,transform .35s;
       pointer-events:none;z-index:15}
     #fact-panel.visible{opacity:1;transform:translateY(-50%) translateX(0);pointer-events:auto}
-    #fp-title{font-size:.85rem;font-weight:bold;line-height:1.3;margin-bottom:4px}
-    #fp-depth{font-size:.55rem;opacity:.4;letter-spacing:.1em;margin-bottom:8px}
-    #fp-desc{font-size:.72rem;opacity:.65;line-height:1.5}
-    #fp-close{position:absolute;top:6px;right:8px;background:none;border:none;color:rgba(255,255,255,.35);font-size:1rem;cursor:pointer;padding:4px}
+    #fp-title{font-size:.82rem;font-weight:bold;line-height:1.3;margin-bottom:4px}
+    #fp-depth{font-size:.52rem;opacity:.4;letter-spacing:.1em;margin-bottom:8px}
+    #fp-desc{font-size:.7rem;opacity:.6;line-height:1.5}
+    #fp-close{position:absolute;top:4px;right:6px;background:none;border:none;
+      color:rgba(255,255,255,.3);font-size:.9rem;cursor:pointer;padding:4px}
     #fp-close:hover{color:#fff}
 
-    /* Click hint */
-    #click-hint{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.25);
-      font:.65rem/1 'Courier New',monospace;z-index:10;pointer-events:none;transition:opacity 1s}
+    /* ── Jump buttons ── */
+    .jump-btn{position:fixed;z-index:20;padding:7px 16px;font:.65rem/1 'Courier New',monospace;
+      letter-spacing:.06em;color:rgba(255,255,255,.45);background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.1);border-radius:18px;cursor:pointer;
+      backdrop-filter:blur(4px);transition:background .2s,color .2s}
+    .jump-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+    #jump-up{right:16px;top:16px}
+    #jump-down{right:16px;bottom:16px}
 
-    /* Jump navigation buttons */
-    .jump-btn{position:fixed;z-index:20;padding:8px 18px;font:.7rem/1 'Courier New',monospace;
-      letter-spacing:.08em;color:rgba(255,255,255,.5);background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.12);border-radius:20px;cursor:pointer;
-      backdrop-filter:blur(6px);transition:opacity .3s,background .2s,color .2s}
-    .jump-btn:hover{background:rgba(255,255,255,.12);color:#fff}
-    #jump-up{right:20px;top:20px}
-    #jump-down{right:20px;bottom:20px}
-
-    /* Surface button */
-    #btn-surface{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:20;
-      padding:10px 24px;font:.8rem/1 'Courier New',monospace;letter-spacing:.1em;text-transform:uppercase;
-      color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:24px;
-      cursor:pointer;backdrop-filter:blur(8px);transition:opacity .4s,background .3s;opacity:0;pointer-events:none}
+    /* ── Surface button ── */
+    #btn-surface{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:20;
+      padding:8px 20px;font:.75rem/1 'Courier New',monospace;letter-spacing:.08em;text-transform:uppercase;
+      color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:20px;
+      cursor:pointer;backdrop-filter:blur(6px);transition:opacity .4s;opacity:0;pointer-events:none}
     #btn-surface.visible{opacity:1;pointer-events:auto}
-    #btn-surface:hover{background:rgba(255,255,255,.18)}
 
-    /* Transition fog */
-    #transition-fog{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:5;transition:opacity .4s}
-
-    /* Scroll hint */
-    #scroll-hint{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);
-      color:rgba(255,255,255,.3);font:.7rem/1 'Courier New',monospace;z-index:10;pointer-events:none;
+    /* ── Scroll hint ── */
+    #scroll-hint{position:fixed;bottom:48px;left:50%;transform:translateX(-50%);
+      color:rgba(255,255,255,.25);font:.65rem/1 'Courier New',monospace;z-index:10;pointer-events:none;
       animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:.3}50%{opacity:.6}}
+    @keyframes pulse{0%,100%{opacity:.2}50%{opacity:.5}}
 
-    /* Hidden fact data — never displayed, used as data source for click panel */
     .fact-data{display:none}
   </style>
 </head>
@@ -90,89 +104,115 @@
 
   <!-- Start page -->
   <div id="start-page">
-    <div id="start-title">VERTIGO</div>
-    <div id="start-sub">
-      A journey from the center of the Earth to the surface of the Sun.
-      12,742 km down. 149,600,000 km up. One scroll.
-    </div>
-    <svg id="start-diagram" viewBox="0 0 320 420" xmlns="http://www.w3.org/2000/svg">
-      <!-- Sun -->
-      <circle cx="160" cy="20" r="18" fill="#ffdd44" opacity=".8"/>
-      <text x="190" y="24" fill="#fff" font-size="9" opacity=".5">Sun</text>
-      <!-- Mercury -->
-      <circle cx="160" cy="70" r="4" fill="#999"/>
-      <text x="175" y="73" fill="#fff" font-size="8" opacity=".4">Mercury</text>
-      <!-- Venus -->
-      <circle cx="160" cy="110" r="6" fill="#ddaa55"/>
-      <text x="175" y="113" fill="#fff" font-size="8" opacity=".4">Venus</text>
-      <!-- Line -->
-      <line x1="160" y1="130" x2="160" y2="170" stroke="rgba(255,255,255,.15)" stroke-dasharray="3,3"/>
-      <!-- Earth -->
-      <circle cx="160" cy="195" r="14" fill="none" stroke="#1a8fcc" stroke-width="1.5"/>
-      <circle cx="160" cy="195" r="14" fill="#1a5588" opacity=".3"/>
-      <text x="182" y="198" fill="#87ceeb" font-size="9" opacity=".7">Earth</text>
-      <!-- Surface label -->
-      <line x1="146" y1="195" x2="100" y2="195" stroke="rgba(255,255,255,.2)"/>
-      <text x="50" y="198" fill="#3a7d44" font-size="8" opacity=".5">Surface</text>
-      <!-- Ocean -->
-      <rect x="152" y="200" width="16" height="20" rx="2" fill="#084466" opacity=".4"/>
-      <text x="175" y="213" fill="#1a8fcc" font-size="7" opacity=".4">Ocean</text>
-      <!-- Crust/Mantle -->
-      <rect x="154" y="222" width="12" height="40" rx="2" fill="#3b1f0a" opacity=".3"/>
-      <text x="175" y="245" fill="#8b6b52" font-size="7" opacity=".4">Mantle</text>
-      <!-- Core -->
-      <circle cx="160" cy="280" r="8" fill="#ff4400" opacity=".6"/>
-      <text x="175" y="283" fill="#ff6644" font-size="8" opacity=".5">Core</text>
-      <!-- Scale labels -->
-      <text x="10" y="24" fill="#fff" font-size="7" opacity=".3">149.6M km</text>
-      <text x="10" y="198" fill="#fff" font-size="7" opacity=".3">0 km</text>
-      <text x="10" y="283" fill="#fff" font-size="7" opacity=".3">−6,371 km</text>
-      <!-- Arrow -->
-      <text x="140" y="350" fill="#fff" font-size="10" opacity=".3">↕</text>
-      <text x="115" y="370" fill="#fff" font-size="8" opacity=".25">scroll to explore</text>
+    <div class="st-title">VERTIGO</div>
+    <div class="st-sub">A journey from Earth's core to the Sun.<br>6,371 km down. 149,600,000 km up.</div>
+    <svg id="start-diagram" viewBox="0 0 300 380" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="150" cy="18" r="16" fill="#ffdd44" opacity=".8"/>
+      <text x="175" y="22" fill="#fff" font-size="8" opacity=".4">Sun</text>
+      <circle cx="150" cy="62" r="3" fill="#999"/>
+      <text x="162" y="65" fill="#fff" font-size="7" opacity=".35">Mercury</text>
+      <circle cx="150" cy="98" r="5" fill="#ddaa55"/>
+      <text x="162" y="101" fill="#fff" font-size="7" opacity=".35">Venus</text>
+      <line x1="150" y1="115" x2="150" y2="145" stroke="rgba(255,255,255,.1)" stroke-dasharray="3,3"/>
+      <circle cx="150" cy="170" r="12" fill="#1a5588" opacity=".3"/>
+      <circle cx="150" cy="170" r="12" fill="none" stroke="#1a8fcc" stroke-width="1"/>
+      <text x="170" y="173" fill="#87ceeb" font-size="8" opacity=".6">Earth</text>
+      <text x="170" y="185" fill="#3a7d44" font-size="6" opacity=".35">Surface</text>
+      <rect x="144" y="178" width="12" height="16" rx="1" fill="#084466" opacity=".3"/>
+      <text x="162" y="192" fill="#1a8fcc" font-size="6" opacity=".3">Ocean</text>
+      <rect x="145" y="196" width="10" height="30" rx="1" fill="#3b1f0a" opacity=".25"/>
+      <text x="162" y="215" fill="#8b6b52" font-size="6" opacity=".3">Mantle</text>
+      <circle cx="150" cy="240" r="7" fill="#ff4400" opacity=".5"/>
+      <text x="162" y="243" fill="#ff6644" font-size="7" opacity=".4">Core</text>
+      <text x="8" y="22" fill="#fff" font-size="6" opacity=".25">149.6M km</text>
+      <text x="8" y="173" fill="#fff" font-size="6" opacity=".25">0 km</text>
+      <text x="8" y="243" fill="#fff" font-size="6" opacity=".25">−6,371 km</text>
     </svg>
-    <button id="start-btn">Begin Exploration</button>
+    <button class="st-btn" id="start-btn">Begin Exploration</button>
   </div>
 
-  <!-- Depth HUD -->
-  <div id="depth-tick"></div>
-  <div id="depth-value">
-    <div class="dv-num" id="dv-num">0 m</div>
-    <div class="dv-unit">altitude</div>
-    <div class="dv-zone" id="dv-zone">Sea Level</div>
+  <!-- Nav toggle -->
+  <button id="nav-toggle">☰</button>
+
+  <!-- Left navigation -->
+  <nav id="nav">
+    <div class="nav-section">
+      <div class="nav-head" data-norm="0.96">☀️ Sun</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-head" data-norm="0.88">☿ Mercury</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-head" data-norm="0.81">♀ Venus</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-head" data-norm="0.75">🌙 Cislunar Space</div>
+      <div class="nav-item" data-norm="0.75">Moon — 384,400 km</div>
+      <div class="nav-item" data-norm="0.70">Geostationary — 35,786 km</div>
+      <div class="nav-item" data-norm="0.67">GPS Satellites — 20,200 km</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-head" data-norm="0.66">🛰️ Low Earth Orbit</div>
+      <div class="nav-item" data-norm="0.66">ISS — 408 km</div>
+      <div class="nav-item" data-norm="0.62">Kármán Line — 100 km</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-head" data-norm="0.58">🌤️ Atmosphere</div>
+      <div class="nav-item" data-norm="0.58">Stratosphere — 39 km</div>
+      <div class="nav-item" data-norm="0.55">Commercial Jets — 12 km</div>
+      <div class="nav-item" data-norm="0.52">Mt. Everest — 8,849 m</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-head" data-norm="0.50">🌊 Sea Level</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-head" data-norm="0.37">🌊 Ocean</div>
+      <div class="nav-item" data-norm="0.46">Sunlight Zone — 200 m</div>
+      <div class="nav-item" data-norm="0.40">Twilight Zone — 1 km</div>
+      <div class="nav-item" data-norm="0.37">Sperm Whale — 2,250 m</div>
+      <div class="nav-item" data-norm="0.28">Titanic — 3,784 m</div>
+      <div class="nav-item" data-norm="0.24">Hadal Snailfish — 8,178 m</div>
+      <div class="nav-item" data-norm="0.22">Mariana Trench — 10,935 m</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-head" data-norm="0.15">🪨 Earth Interior</div>
+      <div class="nav-item" data-norm="0.20">Crust — 35 km</div>
+      <div class="nav-item" data-norm="0.15">Mantle — 2,891 km</div>
+      <div class="nav-item" data-norm="0.07">Outer Core — 5,150 km</div>
+      <div class="nav-item" data-norm="0.02">Inner Core — 6,371 km</div>
+    </div>
+    <div class="nav-home" id="nav-home">⌂ Start Page</div>
+  </nav>
+
+  <!-- Altitude HUD -->
+  <div id="alt-hud">
+    <div class="ah-num" id="dv-num">0 m</div>
+    <div class="ah-zone" id="dv-zone">Sea Level</div>
   </div>
 
   <div id="scroll-hint">↕ scroll to explore</div>
-  <div id="click-hint">click objects for info</div>
 
-  <!-- Hidden fact data (read by JS on click) -->
-  <div class="fact-data" id="fact-iss" data-title="🛰️ International Space Station" data-depth="408 km" data-desc="Orbits at 28,000 km/h, completing one orbit every 90 min. Astronauts see 16 sunrises per day."></div>
-  <div class="fact-data" id="fact-karman" data-title="🚀 Kármán Line" data-depth="100 km" data-desc="The internationally recognized boundary of space."></div>
-  <div class="fact-data" id="fact-meteor" data-title="☄️ Meteors Burn Up" data-depth="~80 km" data-desc="Mesopause: −90°C, the coldest natural temperature on Earth."></div>
-  <div class="fact-data" id="fact-felix" data-title="🪂 Felix Baumgartner" data-depth="38,969 m" data-desc="Freefall at Mach 1.25 — first human to break the sound barrier without a vehicle (2012)."></div>
-  <div class="fact-data" id="fact-concorde" data-title="✈️ Concorde" data-depth="18,300 m" data-desc="Cruised at twice the altitude of subsonic jets. Passengers could see Earth's curvature."></div>
-  <div class="fact-data" id="fact-jets" data-title="✈️ Commercial Jets" data-depth="10–12 km" data-desc="Outside: −55°C, 25% sea-level pressure."></div>
-  <div class="fact-data" id="fact-everest" data-title="🏔️ Mt. Everest" data-depth="8,849 m" data-desc="Highest point on Earth. Death Zone above 8 km — 33% oxygen. First summited by Hillary & Tenzing, 1953."></div>
-  <div class="fact-data" id="fact-sealevel" data-title="🌊 Sea Level" data-depth="0 m" data-desc="71% of Earth's surface is ocean. Average depth: 3,688 m."></div>
-  <div class="fact-data" id="fact-light" data-title="☀️ Sunlight Limit" data-depth="−200 m" data-desc="Photic zone ends. No more photosynthesis below this depth."></div>
-  <div class="fact-data" id="fact-milsub" data-title="🔱 Military Submarine" data-depth="−900 m" data-desc="Crush depth for most military submarines."></div>
-  <div class="fact-data" id="fact-spermwhale" data-title="🐋 Sperm Whale" data-depth="−2,250 m" data-desc="Deepest diving mammal. Hunts giant squid in total darkness."></div>
-  <div class="fact-data" id="fact-titanic" data-title="🚢 RMS Titanic" data-depth="−3,784 m" data-desc="Rests 600 km south of Newfoundland. Pressure: 380 atmospheres."></div>
+  <!-- Fact data -->
+  <div class="fact-data" id="fact-iss" data-title="🛰️ ISS" data-depth="408 km" data-desc="Orbits at 28,000 km/h. 16 sunrises per day. Crew of 6."></div>
+  <div class="fact-data" id="fact-karman" data-title="🚀 Kármán Line" data-depth="100 km" data-desc="Official boundary of space."></div>
+  <div class="fact-data" id="fact-jets" data-title="✈️ Commercial Jets" data-depth="10–12 km" data-desc="−55°C outside. 25% sea-level pressure."></div>
+  <div class="fact-data" id="fact-everest" data-title="🏔️ Mt. Everest" data-depth="8,849 m" data-desc="Death Zone above 8 km. First summited 1953."></div>
+  <div class="fact-data" id="fact-titanic" data-title="🚢 RMS Titanic" data-depth="−3,784 m" data-desc="380 atm pressure. 600 km south of Newfoundland."></div>
+  <div class="fact-data" id="fact-spermwhale" data-title="🐋 Sperm Whale" data-depth="−2,250 m" data-desc="Deepest diving mammal. Hunts giant squid."></div>
+  <div class="fact-data" id="fact-milsub" data-title="🔱 Military Sub" data-depth="−900 m" data-desc="Crush depth for most military submarines."></div>
+  <div class="fact-data" id="fact-mariana" data-title="🐙 Challenger Deep" data-depth="−10,935 m" data-desc="Deepest point. 1,086 atm. First reached 1960."></div>
   <div class="fact-data" id="fact-snailfish" data-title="🐟 Hadal Snailfish" data-depth="−8,178 m" data-desc="Deepest fish ever recorded (2023)."></div>
-  <div class="fact-data" id="fact-mariana" data-title="🐙 Challenger Deep" data-depth="−10,935 m" data-desc="Deepest known point. 1,086 atm. First reached by Piccard & Walsh, 1960."></div>
-  <div class="fact-data" id="fact-mantle" data-title="🌋 Earth's Mantle" data-depth="−35 to −2,891 km" data-desc="84% of Earth's volume. Solid rock that convects over millions of years."></div>
-  <div class="fact-data" id="fact-outercore" data-title="🧲 Outer Core" data-depth="−2,891 to −5,150 km" data-desc="Liquid iron-nickel at 4,000–5,700°C. Generates Earth's magnetic field."></div>
-  <div class="fact-data" id="fact-innercore" data-title="🔥 Inner Core" data-depth="−5,150 to −6,371 km" data-desc="Solid iron-nickel sphere. 5,200°C — comparable to the Sun's surface."></div>
-  <div class="fact-data" id="fact-gps" data-title="🛰️ GPS Satellites" data-depth="20,200 km" data-desc="32 satellites in medium Earth orbit. Signal takes 67 milliseconds to reach the ground."></div>
-  <div class="fact-data" id="fact-geo" data-title="📡 Geostationary Orbit" data-depth="35,786 km" data-desc="Satellites here orbit at Earth's rotation speed — they appear stationary from the ground. TV and weather satellites live here."></div>
-  <div class="fact-data" id="fact-moon" data-title="🌙 The Moon" data-depth="384,400 km" data-desc="Earth's only natural satellite. Light takes 1.3 seconds to travel here. 12 humans have walked on it (1969–1972)."></div>
-  <div class="fact-data" id="fact-venus" data-title="♀️ Venus Orbit" data-depth="~41.4 million km from Earth" data-desc="Earth's closest planetary neighbor. Surface temp: 465°C — hotter than Mercury despite being farther from the Sun. Atmospheric pressure: 92× Earth's."></div>
-  <div class="fact-data" id="fact-mercury" data-title="☿ Mercury Orbit" data-depth="~91.7 million km from Earth" data-desc="Smallest planet. No atmosphere. Dayside: 430°C, nightside: −180°C. One solar day = 176 Earth days."></div>
-  <div class="fact-data" id="fact-sun" data-title="☀️ The Sun" data-depth="149.6 million km (1 AU)" data-desc="A G-type main-sequence star. 1.3 million Earths could fit inside. Light takes 8 min 20 sec to reach Earth."></div>
-  <div class="fact-data" id="fact-voyager" data-title="🚀 Voyager 1" data-depth="~24 billion km" data-desc="Launched 1977. The most distant human-made object. Entered interstellar space in 2012. Still transmitting."></div>
-  <div class="fact-data" id="fact-proxima" data-title="⭐ Proxima Centauri" data-depth="4.24 light-years" data-desc="The nearest star to our Sun. A red dwarf with at least one rocky exoplanet in its habitable zone."></div>
+  <div class="fact-data" id="fact-mantle" data-title="🌋 Mantle" data-depth="−35 to −2,891 km" data-desc="84% of Earth's volume. Drives plate tectonics."></div>
+  <div class="fact-data" id="fact-outercore" data-title="🧲 Outer Core" data-depth="−2,891 to −5,150 km" data-desc="Liquid iron. Generates Earth's magnetic field."></div>
+  <div class="fact-data" id="fact-innercore" data-title="🔥 Inner Core" data-depth="−5,150 to −6,371 km" data-desc="Solid iron. 5,200°C."></div>
+  <div class="fact-data" id="fact-moon" data-title="🌙 Moon" data-depth="384,400 km" data-desc="12 humans walked on it. Light: 1.3 sec away."></div>
+  <div class="fact-data" id="fact-venus" data-title="♀️ Venus" data-depth="~41.4M km" data-desc="465°C surface. 92× Earth's pressure."></div>
+  <div class="fact-data" id="fact-mercury" data-title="☿ Mercury" data-depth="~91.7M km" data-desc="Smallest planet. Day: 430°C, night: −180°C."></div>
+  <div class="fact-data" id="fact-sun" data-title="☀️ Sun" data-depth="149.6M km" data-desc="1.3 million Earths fit inside. Light: 8m 20s to Earth."></div>
+  <div class="fact-data" id="fact-gps" data-title="🛰️ GPS" data-depth="20,200 km" data-desc="32 satellites. Signal: 67ms to ground."></div>
+  <div class="fact-data" id="fact-light" data-title="☀️ Sunlight Limit" data-depth="−200 m" data-desc="Photic zone ends. No photosynthesis below."></div>
 
-  <!-- Click fact panel -->
+  <!-- Fact panel -->
   <div id="fact-panel">
     <button id="fp-close" aria-label="Close">✕</button>
     <div id="fp-title"></div>
@@ -180,12 +220,10 @@
     <div id="fp-desc"></div>
   </div>
 
-  <!-- Jump navigation -->
-  <button id="jump-up" class="jump-btn">▲ soar higher</button>
-  <button id="jump-down" class="jump-btn">▼ dive deeper</button>
-
+  <button id="jump-up" class="jump-btn">▲ soar</button>
+  <button id="jump-down" class="jump-btn">▼ dive</button>
   <button id="btn-surface" aria-label="Return to surface">↑ Surface</button>
-  <div id="transition-fog"></div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

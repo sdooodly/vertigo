@@ -1,19 +1,16 @@
 import * as THREE from 'three';
-import { kmToY } from '../../altitude.js';
-import { WORLD_HEIGHT } from '../../constants.js';
+import { kmToY, WORLD_HEIGHT } from '../../altitude.js';
 const H = WORLD_HEIGHT;
 const M = (c) => new THREE.MeshStandardMaterial({color:c,flatShading:true});
 
 export class Core {
   constructor(scene) {
     this.group = new THREE.Group(); scene.add(this.group); this.time = 0;
-    const coreY = H * 0.5; // core is at center of world
+    const coreY = kmToY(-6371);
     // Crust/mantle planes
     [[-50,0x5c3a1e,.7],[-500,0x4a2a10,.75],[-1500,0x3b1a08,.8],[-3500,0x2a0a00,.85],[-5500,0x1a0500,.9]].forEach(([km,c,o])=>{
       const m=new THREE.Mesh(new THREE.PlaneGeometry(160,160),new THREE.MeshStandardMaterial({color:c,transparent:true,opacity:o,side:THREE.DoubleSide,roughness:1}));
       m.rotation.x=-Math.PI/2;m.position.y=kmToY(km);this.group.add(m);
-      // Mirror on bottom half
-      const m2=m.clone();m2.position.y=H-kmToY(km);this.group.add(m2);
     });
     // Debris
     const dC=300,dP=new Float32Array(dC*3);
