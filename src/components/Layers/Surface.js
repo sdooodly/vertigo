@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { kmToY, kmToYBottom } from '../../altitude.js';
+import { kmToY } from '../../altitude.js';
 const M = (c) => new THREE.MeshStandardMaterial({color:c,flatShading:true});
 
 export class Surface {
-  constructor(scene, hemi) {
+  constructor(scene) {
     this.group = new THREE.Group(); scene.add(this.group); this.time = 0;
-    const Y = hemi === 'bottom' ? kmToYBottom : kmToY;
+    const Y = kmToY;
     const gY = Y(0);
     // Ground
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(200,200), new THREE.MeshStandardMaterial({color:0x3a7d44,roughness:1,side:THREE.DoubleSide}));

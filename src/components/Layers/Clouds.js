@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { kmToY, kmToYBottom } from '../../altitude.js';
+import { kmToY } from '../../altitude.js';
 
 export class Clouds {
-  constructor(scene, hemi) {
+  constructor(scene) {
     this.group = new THREE.Group(); scene.add(this.group); this.time = 0;
-    const Y = hemi === 'bottom' ? kmToYBottom : kmToY;
+    const Y = kmToY;
     const count = 50;
     const geo = new THREE.IcosahedronGeometry(3,1);
     const mat = new THREE.MeshStandardMaterial({color:0xffffff,transparent:true,opacity:.55,flatShading:true,roughness:1});
